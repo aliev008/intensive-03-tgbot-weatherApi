@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 
 @Slf4j
 @Service
@@ -21,6 +22,7 @@ public class UpdateDispatcher {
     CommandHandler commandHandler;
     MessageHandler messageHandler;
     CallbackQueryHandler queryHandler;
+    DatabaseService databaseService;
 
     public BotApiMethod<?> distribute(Update update, TgBot bot) {
         if (update.hasCallbackQuery()) {
@@ -29,6 +31,16 @@ public class UpdateDispatcher {
         }
         if (update.hasMessage()) {
             Message message = update.getMessage();
+
+            if (!databaseService.isUserExists(message.getFrom().getId())) {
+                User user = message.getFrom();
+                Long userId = user.getId();
+                String firstName = user.getFirstName();
+                String lastName = user.getLastName();
+                String username = user.getUserName();
+                databaseService.saveOrUpdateUser(userId, firstName, lastName, username);
+            }
+
             if (message.hasText()) {
                 String text = message.getText();
                 if (text.charAt(0) == '/') {

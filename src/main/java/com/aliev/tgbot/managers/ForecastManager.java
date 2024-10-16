@@ -2,6 +2,7 @@ package com.aliev.tgbot.managers;
 
 import com.aliev.tgbot.dto.Data;
 import com.aliev.tgbot.dto.WeatherResponse;
+import com.aliev.tgbot.service.DatabaseService;
 import com.aliev.tgbot.service.WeatherService;
 import com.aliev.tgbot.service.factories.KeyboardFactory;
 import com.aliev.tgbot.telegram.TgBot;
@@ -31,6 +32,7 @@ import static com.aliev.tgbot.data.QueryData.*;
 public class ForecastManager {
     KeyboardFactory keyboardFactory;
     WeatherService weatherService;
+    DatabaseService databaseService;
 
     public BotApiMethod<?> answerCommand(Message message, TgBot bot) {
         System.out.println("INSIDE ForecastManager answerCommand");
@@ -72,12 +74,21 @@ public class ForecastManager {
             case "s" -> {
                 return sendResult(query, data[2], data[3], bot);
             }
+
+            case "h" -> {
+                return AnswerCallbackQuery.builder()
+                        .callbackQueryId(query.getId())
+                        .text("ВЫВОД ИСТОРИИ ГОРОДОВ")
+                        .build();
+            }
         }
         log.error("Unsupported query: " + query);
         return null;
     }
 
     private BotApiMethod<?> sendResult(CallbackQuery query, String type, String cityName, TgBot bot) {
+        Long userId = query.getFrom().getId();
+        databaseService.addCityForUser(userId, cityName);
         try {
             bot.execute(
                     SendMessage.builder()
@@ -196,9 +207,9 @@ public class ForecastManager {
                 .messageId(query.getMessage().getMessageId())
                 .replyMarkup(
                         keyboardFactory.getInlineKeyboard(
-                                List.of("Название Города"),
-                                List.of(1),
-                                List.of(fc_c_.name())
+                                List.of("Название Города", "История Запросов"),
+                                List.of(1, 2),
+                                List.of(fc_c_.name(), fc_h.name())
                         )
                 )
                 .build();
