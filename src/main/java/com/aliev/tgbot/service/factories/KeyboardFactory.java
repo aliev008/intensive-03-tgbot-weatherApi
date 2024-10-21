@@ -29,9 +29,9 @@ public class KeyboardFactory {
         }
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
         int index = 0;
-        for (Integer rowNumber : configuration) {
+        for (Integer rowButtonsNumber : configuration) {
             List<InlineKeyboardButton> row = new ArrayList<>();
-            for (int i = 0; i < rowNumber; i++) {
+            for (int i = 0; i < rowButtonsNumber; i++) {
                 InlineKeyboardButton button = new InlineKeyboardButton();
                 button.setText(text.get(index));
                 button.setCallbackData(data.get(index));

@@ -77,9 +77,9 @@ public class DatabaseService {
     }
 
     // Получить список городов, запрошенных пользователем
-    public List<String> getUserCities(long telegramId) throws SQLException {
+    public List<String> getUserCities(long telegramId) {
         List<String> cities = new ArrayList<>();
-        String query = "SELECT city_name FROM cities c " +
+        String query = "SELECT DISTINCT city_name FROM cities c " +
                 "JOIN telegram_user u ON c.user_id = u.id WHERE u.id = ?";
         try (Connection connection = databaseConnection.connect();
              PreparedStatement ps = connection.prepareStatement(query)) {
@@ -88,6 +88,8 @@ public class DatabaseService {
             while (rs.next()) {
                 cities.add(rs.getString("city_name"));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return cities;
     }

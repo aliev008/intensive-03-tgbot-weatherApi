@@ -21,6 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.aliev.tgbot.data.QueryData.*;
@@ -76,10 +77,7 @@ public class ForecastManager {
             }
 
             case "h" -> {
-                return AnswerCallbackQuery.builder()
-                        .callbackQueryId(query.getId())
-                        .text("ВЫВОД ИСТОРИИ ГОРОДОВ")
-                        .build();
+                return showUserHistory(query, bot);
             }
         }
         log.error("Unsupported query: " + query);
@@ -208,11 +206,70 @@ public class ForecastManager {
                 .replyMarkup(
                         keyboardFactory.getInlineKeyboard(
                                 List.of("Название Города", "История Запросов"),
-                                List.of(1, 2),
+                                List.of(1, 1),
                                 List.of(fc_c_.name(), fc_h.name())
                         )
                 )
                 .build();
     }
+
+    private BotApiMethod<?> showUserHistory(CallbackQuery query, TgBot bot) {
+        Long userId = query.getFrom().getId();
+        List<String> userCities = databaseService.getUserCities(userId);
+        if (userCities.isEmpty()) {
+            return EditMessageText.builder()
+                    .chatId(query.getMessage().getChatId())
+                    .messageId(query.getMessage().getMessageId())
+                    .text(
+                            """
+                                    Вы ранее не запрашивали никакие прогнозы
+                                    """
+                    )
+                    .replyMarkup(
+                            keyboardFactory.getInlineKeyboard(
+                                    List.of("На главную"),
+                                    List.of(1),
+                                    List.of(main.name())
+                            )
+                    )
+                    .build();
+        }
+        List<Integer> keyboardConfig = new ArrayList<>();
+        if (userCities.size() % 2 == 0) {
+            int numberOfRows = userCities.size() / 2;
+            for (int i = 1; i <= numberOfRows; i++) {
+                keyboardConfig.add(2);
+            }
+        } else {
+            int numberOfRows = (userCities.size() - 1) / 2;
+            for (int i = 1; i <= numberOfRows; i++) {
+                keyboardConfig.add(2);
+            }
+            keyboardConfig.add(1);
+        }
+        List<String> data = new ArrayList<>();
+        for (String cityName : userCities) {
+            data.add(fc_e_.name() + cityName);
+        }
+
+        return EditMessageText.builder()
+                .chatId(query.getMessage().getChatId())
+                .messageId(query.getMessage().getMessageId())
+                .text(
+                        """
+                                Ниже представлены на выбор города, которые вы ранее уже запрашивали.
+                                Выберите из них, чтобы узнать прогноз:
+                                """
+                )
+                .replyMarkup(
+                        keyboardFactory.getInlineKeyboard(
+                                userCities,
+                                keyboardConfig,
+                                data
+                        )
+                )
+                .build();
+    }
+
 
 }

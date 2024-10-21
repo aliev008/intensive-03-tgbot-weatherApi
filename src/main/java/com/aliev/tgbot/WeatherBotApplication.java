@@ -12,4 +12,5 @@ public class WeatherBotApplication {
     public static void main(String[] args) {
         SpringApplication.run(WeatherBotApplication.class, args);
     }
+    // ФУНКЦИОНАЛ РЕАЛИЗОВАЛ. НАДО ТЕПЕРЬ УЛУЧШИТЬ СВОЙ КОД.
 }
